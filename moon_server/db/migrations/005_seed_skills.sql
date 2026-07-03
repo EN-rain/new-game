@@ -92,4 +92,3 @@ UPDATE mob_configs SET
     ]'
 WHERE mob_type = 'warden';
 
-WHERE mob_type = 'warden';

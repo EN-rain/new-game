@@ -150,8 +150,8 @@ func spawn_slime_mob_at(world_pos: Vector2) -> Node2D:
 func _on_slime_mob_died(_mob: Node) -> void:
 	current_slime_mob_count = max(current_slime_mob_count - 1, 0)
 	_round_active_mobs = max(_round_active_mobs - 1, 0)
-	var xp: int = _mob.xp_value if _mob.has_method("get") or "xp_value" in _mob else 10
-	mob_died.emit(_mob, 1, xp)
+	if _was_mob_killed(_mob):
+		mob_died.emit(_mob, 1, _get_int_property(_mob, "xp_value", 10))
 	_emit_active_count()
 	_check_round_clear()
 
@@ -206,22 +206,18 @@ func spawn_elite_mob_at(elite_type: String, world_pos: Vector2) -> Node2D:
 func _on_elite_mob_died(_elite: Node) -> void:
 	current_elite_mob_count = max(current_elite_mob_count - 1, 0)
 	_round_active_mobs = max(_round_active_mobs - 1, 0)
-	var xp: int = _elite.xp_value if _elite.has_method("get") or "xp_value" in _elite else 25
-	mob_died.emit(_elite, 5, xp)
+	if _was_mob_killed(_elite):
+		mob_died.emit(_elite, 5, _get_int_property(_elite, "xp_value", 25))
 	_emit_active_count()
 	_check_round_clear()
 
 
 func _on_common_mob_died(_mob: Node) -> void:
 	_round_active_mobs = max(_round_active_mobs - 1, 0)
-	var score_value: int = 1
-	var xp: int = 10
-	if _mob != null:
-		if _mob.has_method("get") or "xp_value" in _mob:
-			xp = int(_mob.xp_value)
-		if _mob.has_method("get") or "score_value" in _mob:
-			score_value = int(_mob.score_value)
-	mob_died.emit(_mob, score_value, xp)
+	if _was_mob_killed(_mob):
+		var score_value: int = _get_int_property(_mob, "score_value", 1)
+		var xp: int = _get_int_property(_mob, "xp_value", 10)
+		mob_died.emit(_mob, score_value, xp)
 	_emit_active_count()
 	_check_round_clear()
 
@@ -254,7 +250,7 @@ func spawn_mob_by_name(mob_name: String, count: int = 1) -> int:
 			continue
 		mob.global_position = get_random_spawn_position()
 		mob.set_meta("mob_type", key)
-		mob.tree_exiting.connect(_on_slime_mob_died.bind(mob))
+		mob.tree_exiting.connect(_on_common_mob_died.bind(mob))
 		_parent.add_child(mob)
 		if _round_manager != null:
 			_round_manager.register_mob(mob)
@@ -304,6 +300,24 @@ func _check_round_clear() -> void:
 		return
 	_round_in_progress = false
 	round_cleared.emit(_current_round)
+
+
+func _get_int_property(node: Node, property_name: String, default_value: int) -> int:
+	if node == null or not is_instance_valid(node):
+		return default_value
+	if property_name in node:
+		return int(node.get(property_name))
+	return default_value
+
+
+func _was_mob_killed(node: Node) -> bool:
+	if node == null:
+		return false
+	if "is_dying" in node and bool(node.get("is_dying")):
+		return true
+	if "health" in node and node.get("health") is HealthComponent:
+		return bool((node.get("health") as HealthComponent).is_dead)
+	return false
 
 
 func get_random_spawn_position() -> Vector2:

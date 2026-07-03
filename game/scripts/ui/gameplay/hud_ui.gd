@@ -26,6 +26,7 @@ var _boss_phase_label: Label = null
 var _tracked_boss: BTBoss = null
 
 var player_ref: CharacterBody2D
+var _pending_player_ref: CharacterBody2D = null
 
 @export var block_input_when_overlay_open: bool = false
 
@@ -44,9 +45,18 @@ func _ready() -> void:
 		MultiplayerManager.connection_lost.connect(_on_connection_lost)
 	_create_disconnect_overlay()
 	_create_boss_health_bar()
+	if _pending_player_ref != null and is_instance_valid(_pending_player_ref):
+		var pending := _pending_player_ref
+		_pending_player_ref = null
+		set_player(pending)
 
 
 func set_player(player: CharacterBody2D) -> void:
+	if player_panel == null:
+		_pending_player_ref = player
+		player_ref = player
+		return
+
 	if LevelSystem.xp_gained.is_connected(_on_xp_gained):
 		LevelSystem.xp_gained.disconnect(_on_xp_gained)
 	if LevelSystem.level_up.is_connected(_on_level_up):

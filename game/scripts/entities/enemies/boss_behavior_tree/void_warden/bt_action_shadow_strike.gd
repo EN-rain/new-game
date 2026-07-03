@@ -27,8 +27,8 @@ func _tick(_p_delta: float) -> Status:
 	boss.global_position = teleport_pos
 	
 	# Deal damage
-	if boss.player.has_method("take_damage"):
-		boss.player.take_damage(damage, boss.global_position, knockback)
+	if boss.player.has_method("apply_damage"):
+		boss.player.apply_damage(damage, boss.global_position, knockback, boss.boss_display_name)
 	
 	boss.set_skill_cooldown("shadow_strike", cooldown)
 	print("[VoidWarden] Shadow Strike!")

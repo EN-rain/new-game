@@ -130,6 +130,11 @@ func _on_start_pressed() -> void:
 	MultiplayerManager.player_ign = _get_ign()
 	MultiplayerManager.player_class = null
 	MultiplayerManager.player_subclass = null
+	MultiplayerManager.subclass_choice_made = false
+	MultiplayerManager.player_level = 1
+	SoloRunSaveManager.clear_pending_continue_snapshot()
+	CoinManager.reset_coins()
+	LevelSystem.reset_run_state()
 	if not main_game_scene_path.is_empty():
 		get_tree().change_scene_to_file(main_game_scene_path)
 

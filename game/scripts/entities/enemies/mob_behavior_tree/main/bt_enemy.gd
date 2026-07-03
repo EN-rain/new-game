@@ -26,6 +26,7 @@ signal died(xp_reward: int)
 
 @export var teleport_distance: float = 10.0
 @export var blink_cooldown: float = 3.0
+@export var can_yield_chase_to_blink: bool = false
 @export_range(0.0, 1.0, 0.01) var melee_hit_timing: float = 1.0
 @export var player_group_name: StringName = &"player"
 @export var idle_move_interval: float = 3.0
@@ -70,6 +71,9 @@ var _attack_cooldown_fallback_timer: SceneTreeTimer = null
 
 const WORLD_LAYER_MASK := 1
 const PLAYER_BODY_LAYER_MASK := 2
+const MIN_PLAYER_SEPARATION_MARGIN := 4.0
+const MIN_PLAYER_SEPARATION_FLOOR := 18.0
+const ATTACK_RANGE_INSET := 2.0
 
 
 func _ready() -> void:
@@ -148,6 +152,7 @@ func _physics_process(delta: float) -> void:
 
 	velocity += knockback_velocity
 	knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, knockback_decay * delta)
+	_apply_player_separation_guard()
 
 	if not is_dying:
 		move_and_slide()
@@ -158,6 +163,7 @@ func take_damage(amount: int) -> void:
 	if is_dying:
 		return
 
+	amount = _apply_incoming_damage_modifiers(amount)
 	var was_killed := health.take_damage(amount)
 
 	DamageNumbers.spawn_damage(global_position + Vector2(0, -20), amount, false, false)
@@ -207,6 +213,90 @@ func is_targetable_player(body: Node) -> bool:
 	if body.has_method("is_targetable"):
 		return body.is_targetable()
 	return true
+
+
+func get_minimum_player_separation(target: Node2D, margin: float = MIN_PLAYER_SEPARATION_MARGIN) -> float:
+	if target == null or not is_instance_valid(target):
+		return MIN_PLAYER_SEPARATION_FLOOR
+	var self_radius := _get_body_clearance_radius(self)
+	var target_radius := _get_body_clearance_radius(target)
+	var separation := maxf(MIN_PLAYER_SEPARATION_FLOOR, self_radius + target_radius + margin)
+	var attack_radius := get_attack_area_radius()
+	if attack_radius > 0.0:
+		separation = minf(separation, maxf(0.0, attack_radius - ATTACK_RANGE_INSET))
+	return separation
+
+
+func get_attack_area_radius() -> float:
+	if attack_area == null:
+		return 0.0
+	return _get_area_clearance_radius(attack_area)
+
+
+func is_body_in_attack_range(body: Node2D) -> bool:
+	if body == null or not is_instance_valid(body) or attack_area == null:
+		return false
+	if attack_area.overlaps_body(body):
+		return true
+	var attack_radius := get_attack_area_radius()
+	return attack_radius > 0.0 and global_position.distance_to(body.global_position) <= attack_radius
+
+
+func _apply_player_separation_guard() -> void:
+	if player == null or not is_instance_valid(player) or is_dying or is_teleporting:
+		return
+	if not is_targetable_player(player):
+		return
+
+	var offset := global_position - player.global_position
+	if offset.length_squared() <= 0.0001:
+		offset = Vector2.LEFT if animated_sprite != null and animated_sprite.flip_h else Vector2.RIGHT
+
+	var min_separation := get_minimum_player_separation(player)
+	var distance := offset.length()
+	if distance >= min_separation:
+		return
+
+	var away := offset.normalized()
+	global_position = player.global_position + (away * min_separation)
+	if velocity.dot(-away) > 0.0:
+		velocity = velocity.slide(away)
+
+
+func _get_body_clearance_radius(body: Node2D) -> float:
+	var radius := 0.0
+	for child in body.get_children():
+		var shape_node := child as CollisionShape2D
+		if shape_node == null or shape_node.disabled or shape_node.shape == null:
+			continue
+		var scale_factor := maxf(absf(shape_node.global_scale.x), absf(shape_node.global_scale.y))
+		var shape := shape_node.shape
+		if shape is CircleShape2D:
+			radius = maxf(radius, (shape as CircleShape2D).radius * scale_factor)
+		elif shape is RectangleShape2D:
+			radius = maxf(radius, (shape as RectangleShape2D).size.length() * 0.5 * scale_factor)
+		elif shape is CapsuleShape2D:
+			var capsule := shape as CapsuleShape2D
+			radius = maxf(radius, maxf(capsule.radius, capsule.height * 0.5) * scale_factor)
+	return radius
+
+
+func _get_area_clearance_radius(area: Area2D) -> float:
+	var radius := 0.0
+	for child in area.get_children():
+		var shape_node := child as CollisionShape2D
+		if shape_node == null or shape_node.disabled or shape_node.shape == null:
+			continue
+		var scale_factor := maxf(absf(shape_node.global_scale.x), absf(shape_node.global_scale.y))
+		var shape := shape_node.shape
+		if shape is CircleShape2D:
+			radius = maxf(radius, (shape as CircleShape2D).radius * scale_factor)
+		elif shape is RectangleShape2D:
+			radius = maxf(radius, (shape as RectangleShape2D).size.length() * 0.5 * scale_factor)
+		elif shape is CapsuleShape2D:
+			var capsule := shape as CapsuleShape2D
+			radius = maxf(radius, maxf(capsule.radius, capsule.height * 0.5) * scale_factor)
+	return radius
 
 
 func has_target_line_of_sight() -> bool:
@@ -300,7 +390,7 @@ func _on_attack_area_entered(_body: Node) -> void:
 
 
 func begin_melee_attack(target: Node, damage: int, knockback: float) -> bool:
-	if is_attacking or is_taking_damage or is_dying or is_teleporting:
+	if is_attacking or is_taking_damage or is_dying or is_teleporting or not can_attack:
 		return false
 
 	_pending_attack_mode = &"melee"
@@ -310,6 +400,7 @@ func begin_melee_attack(target: Node, damage: int, knockback: float) -> bool:
 	_pending_attack_resolved = false
 	velocity = Vector2.ZERO
 	is_attacking = true
+	_start_attack_cooldown()
 
 	if not _play_attack_animation():
 		_resolve_pending_attack()
@@ -339,7 +430,7 @@ func begin_ranged_attack(direction: Vector2, projectile_speed: float) -> bool:
 	_pending_attack_resolved = false
 	velocity = Vector2.ZERO
 	is_attacking = true
-	can_attack = false
+	_start_attack_cooldown()
 	_face_direction(_pending_arrow_direction)
 
 	if not _play_attack_animation():
@@ -424,7 +515,7 @@ func _resolve_melee_attack() -> void:
 	_pending_attack_resolved = true
 	var target := _pending_attack_target
 	if target != null and is_instance_valid(target) and is_targetable_player(target) and target.has_method("apply_damage"):
-		if attack_area != null and not attack_area.overlaps_body(target):
+		if target is Node2D and not is_body_in_attack_range(target as Node2D):
 			return
 		target.apply_damage(_pending_attack_damage, global_position, _pending_attack_knockback, attacker_display_name)
 		can_damage = false
@@ -460,10 +551,9 @@ func _resolve_ranged_attack() -> void:
 	arrow.speed = _pending_arrow_speed
 	arrow.rotation = _pending_arrow_direction.angle()
 
-	_start_attack_cooldown()
-
 
 func _start_attack_cooldown() -> void:
+	can_attack = false
 	if attack_cooldown_timer != null:
 		attack_cooldown_timer.start()
 		return
@@ -479,6 +569,12 @@ func _start_attack_cooldown() -> void:
 func _on_attack_cooldown_fallback_timeout() -> void:
 	_attack_cooldown_fallback_timer = null
 	can_attack = true
+
+
+func _apply_incoming_damage_modifiers(amount: int) -> int:
+	if has_meta("damage_modifier"):
+		amount = int(round(float(amount) * float(get_meta("damage_modifier"))))
+	return maxi(1, amount)
 
 
 func _face_direction(direction: Vector2) -> void:

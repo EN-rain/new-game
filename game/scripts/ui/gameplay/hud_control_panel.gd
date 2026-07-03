@@ -2,6 +2,9 @@ extends Control
 class_name HudControlPanel
 
 const SCORE_FORMAT := "Score: %d"
+const ROUND_POPUP_FADE_IN_SEC := 0.25
+const ROUND_POPUP_HOLD_SEC := 3.0
+const ROUND_POPUP_FADE_OUT_SEC := 0.45
 
 @onready var player_stats_root: Control = $PlayerStats
 @onready var players_root: Control = $Players
@@ -92,12 +95,12 @@ func show_round_level(round_number: int, added_mobs: int, profile: Dictionary) -
 	_round_popup_tween.set_trans(Tween.TRANS_CUBIC)
 	_round_popup_tween.set_ease(Tween.EASE_OUT)
 	_round_popup_tween.set_parallel(true)
-	_round_popup_tween.tween_property(round_level_label, "modulate", Color.WHITE, 0.25)
-	_round_popup_tween.tween_property(round_level_label, "scale", Vector2.ONE, 0.25)
-	_round_popup_tween.chain().tween_interval(1.1)
+	_round_popup_tween.tween_property(round_level_label, "modulate", Color.WHITE, ROUND_POPUP_FADE_IN_SEC)
+	_round_popup_tween.tween_property(round_level_label, "scale", Vector2.ONE, ROUND_POPUP_FADE_IN_SEC)
+	_round_popup_tween.chain().tween_interval(ROUND_POPUP_HOLD_SEC)
 	_round_popup_tween.chain().set_parallel(true)
-	_round_popup_tween.tween_property(round_level_label, "modulate", Color(1, 1, 1, 0), 0.35)
-	_round_popup_tween.tween_property(round_level_label, "scale", Vector2(1.04, 1.04), 0.35)
+	_round_popup_tween.tween_property(round_level_label, "modulate", Color(1, 1, 1, 0), ROUND_POPUP_FADE_OUT_SEC)
+	_round_popup_tween.tween_property(round_level_label, "scale", Vector2(1.04, 1.04), ROUND_POPUP_FADE_OUT_SEC)
 	_round_popup_tween.finished.connect(_on_round_popup_finished)
 
 

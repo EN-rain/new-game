@@ -42,7 +42,7 @@ children = [SubResource("BTCondition_in_range"), SubResource("BTAction_7yx3v")]
 script = ExtResource("6_chase")
 
 [sub_resource type="BTSelector" id="BTSelector_action"]
-children = [SubResource("BTSequence_blink_attack"), SubResource("BTSequence_direct_attack"), SubResource("BTAction_chase")]
+children = [SubResource("BTSequence_direct_attack"), SubResource("BTSequence_blink_attack"), SubResource("BTAction_chase")]
 
 [sub_resource type="BTSequence" id="BTSequence_combat"]
 children = [SubResource("BTAction_detect"), SubResource("BTCondition_los"), SubResource("BTSelector_action")]

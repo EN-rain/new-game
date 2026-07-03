@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/hud_active_skill_slot.tscn" id="14_activeslot"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud_passive_skill_icon.tscn" id="15_passiveicon"]
 [ext_resource type="Script" uid="uid://bh4xffp22lrww" path="res://scripts/ui/gameplay/hud_player_info_panel.gd" id="16_playerinfo"]
+[ext_resource type="Script" path="res://scripts/ui/gameplay/death_overlay.gd" id="17_deathoverlay"]
 
 [sub_resource type="StyleBoxFlat" id="hp_bg"]
 content_margin_left = 3.0
@@ -281,17 +282,15 @@ script = ExtResource("9_hudcontrol")
 [node name="PlayerStats" type="Control" parent="Control" unique_id=1019271898]
 layout_mode = 1
 anchors_preset = 0
-offset_right = 589.0
+offset_right = 330.0
 offset_bottom = 191.0
 mouse_filter = 2
 script = ExtResource("8_hudplayer")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Control/PlayerStats" unique_id=888559358]
-layout_mode = 0
-offset_left = 293.0
-offset_top = 92.0
-offset_right = 573.0
-offset_bottom = 152.0
+layout_mode = 1
+offset_right = 280.0
+offset_bottom = 60.0
 
 [node name="ManaBar" type="ProgressBar" parent="Control/PlayerStats/VBoxContainer" unique_id=377156295]
 unique_name_in_owner = true
@@ -315,11 +314,10 @@ offset_right = 196.0
 offset_bottom = 186.0
 
 [node name="Status" type="HBoxContainer" parent="Control/PlayerStats" unique_id=605716508]
-layout_mode = 0
-offset_left = 301.0
-offset_top = 160.0
-offset_right = 341.0
-offset_bottom = 200.0
+layout_mode = 1
+offset_top = 71.0
+offset_right = 40.0
+offset_bottom = 111.0
 
 [node name="TextureRect" type="TextureRect" parent="Control/PlayerStats/Status" unique_id=767378623]
 layout_mode = 2
@@ -327,10 +325,10 @@ layout_mode = 2
 [node name="LevelLabel" type="Label" parent="Control/PlayerStats" unique_id=777888999]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 301.0
-offset_top = 60.0
-offset_right = 380.0
-offset_bottom = 85.0
+offset_left = 78.0
+offset_top = 77.0
+offset_right = 157.0
+offset_bottom = 103.0
 theme_override_colors/font_color = Color(0.95, 0.82, 0.35, 1)
 theme_override_font_sizes/font_size = 18
 text = "Lv.1"
@@ -601,6 +599,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+script = ExtResource("17_deathoverlay")
 
 [node name="ColorRect" type="ColorRect" parent="Death" unique_id=1468384267]
 unique_name_in_owner = true
@@ -764,11 +763,13 @@ theme_override_constants/separation = 6
 
 [node name="Stats" type="Control" parent="." unique_id=281895974]
 layout_mode = 3
-anchors_preset = 15
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+grow_horizontal = 0
+grow_vertical = 0
 mouse_filter = 2
 script = ExtResource("11_hudstats")
 

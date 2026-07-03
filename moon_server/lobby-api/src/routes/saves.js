@@ -8,7 +8,7 @@ const router = express.Router();
 router.get('/', requireAuth, async (req, res, next) => {
   try {
     const { rows } = await db.query(
-      `SELECT slot, version, data->>'saved_at' as saved_at, data->>'slot_name' as slot_name 
+      `SELECT slot, version, data, data->>'saved_at' as saved_at, data->>'slot_name' as slot_name
        FROM saves WHERE user_id = $1 ORDER BY slot ASC`,
       [req.user.user_id]
     );

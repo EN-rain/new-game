@@ -188,10 +188,16 @@ func logout():
 func disconnect_server():
 	socket.close()
 	_pending_outbox.clear()
+	_input_backpressure_until_msec = 0
 	match_id = ""
 	room_code = ""
+	lobby_name = ""
 	is_host = false
+	is_admin = false
+	match_phase = "lobby"
 	players.clear()
+	player_classes.clear()
+	player_subclasses.clear()
 
 func get_server_endpoint_summary() -> String:
 	return _base_url

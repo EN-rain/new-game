@@ -356,6 +356,9 @@ func apply_damage(amount: int, source_position: Vector2, force: float, attacker_
 		var modifier = get_meta("damage_modifier")
 		amount = int(amount * modifier)
 		print("[Player] Damage modified by %.0f%% to %d" % [modifier * 100, amount])
+	if has_meta("defense_modifier"):
+		var defense_modifier := maxf(0.05, float(get_meta("defense_modifier")))
+		amount = maxi(1, int(round(float(amount) / defense_modifier)))
 
 	last_attacker_name = attacker_name.strip_edges()
 	
@@ -372,7 +375,11 @@ func apply_damage(amount: int, source_position: Vector2, force: float, attacker_
 		damage_particles.emitting = true
 	
 	# Knockback
-	var dir := (global_position - source_position).normalized()
+	var dir := global_position - source_position
+	if dir.length_squared() <= 0.0001:
+		dir = Vector2.RIGHT * facing
+	else:
+		dir = dir.normalized()
 	knockback_velocity = dir * force
 	
 	# Enter combat state for mana regen

@@ -200,6 +200,7 @@ func take_damage(amount: int):
 	if is_taking_damage or is_dying:
 		return
 	
+	amount = _apply_incoming_damage_modifiers(amount)
 	var died = health.take_damage(amount)
 	
 	if not died:
@@ -310,6 +311,7 @@ func initial_teleport():
 	if not _has_valid_player() or is_dying:
 		animated_sprite.modulate.a = 1.0
 		is_teleporting = false
+		is_blinking = false
 		return
 	
 	var direction_to_player = (player.global_position - global_position).normalized()
@@ -386,6 +388,7 @@ func teleport_to_player_back():
 	if not _has_valid_player():
 		attack_area.monitoring = true
 		is_teleporting = false
+		is_blinking = false
 		blink_cooldown_timer.start()  # reset can_blink so lancer doesn't get stuck
 		return
 	
@@ -554,3 +557,9 @@ func _pick_idle_target() -> void:
 		random_offset = Vector2.RIGHT.rotated(randf() * TAU) * 20.0
 	_idle_target = global_position + random_offset
 	_has_idle_target = true
+
+
+func _apply_incoming_damage_modifiers(amount: int) -> int:
+	if has_meta("damage_modifier"):
+		amount = int(round(float(amount) * float(get_meta("damage_modifier"))))
+	return maxi(1, amount)

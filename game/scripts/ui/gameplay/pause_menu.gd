@@ -67,12 +67,8 @@ func _on_save_round_pressed() -> void:
 		if save_round_button != null:
 			save_round_button.text = "Save Failed"
 		return
-	var slot: int = int(CloudSaveManager.find_empty_slot())
-	if slot == 0:
-		if save_round_button != null:
-			save_round_button.text = "All Slots Full"
-		return
-	var result = await CloudSaveManager.save_to_slot(slot, "solo")
+	var result = await CloudSaveManager.auto_save("solo")
+	var slot: int = int(result.get("slot", 0))
 	if save_round_button != null:
 		save_round_button.text = "Saved (Slot %d)" % slot if result.get("success", false) else "Save Failed"
 

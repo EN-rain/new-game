@@ -23,8 +23,8 @@ func _tick(_p_delta: float) -> Status:
 		return Status.FAILURE
 	
 	# Damage player
-	if boss.player.has_method("take_damage"):
-		boss.player.take_damage(damage, boss.global_position, 100.0)
+	if boss.player.has_method("apply_damage"):
+		boss.player.apply_damage(damage, boss.global_position, 100.0, boss.boss_display_name)
 	
 	# Heal boss
 	var heal_amount: int = int(damage * heal_percent)

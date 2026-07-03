@@ -110,7 +110,7 @@ func load_from_slot(slot: int) -> bool:
 	if snapshot.is_empty():
 		return false
 	_apply_snapshot_to_globals(snapshot)
-	_pending_continue_snapshot = snapshot.duplicate(true)
+	set_pending_continue_snapshot(snapshot)
 	return true
 
 
@@ -120,9 +120,17 @@ func prepare_continue_run() -> bool:
 		var snapshot := _read_slot(i)
 		if not snapshot.is_empty():
 			_apply_snapshot_to_globals(snapshot)
-			_pending_continue_snapshot = snapshot.duplicate(true)
+			set_pending_continue_snapshot(snapshot)
 			return true
 	return false
+
+
+func set_pending_continue_snapshot(snapshot: Dictionary) -> void:
+	_pending_continue_snapshot = snapshot.duplicate(true)
+
+
+func clear_pending_continue_snapshot() -> void:
+	_pending_continue_snapshot.clear()
 
 
 func consume_pending_continue_snapshot() -> Dictionary:

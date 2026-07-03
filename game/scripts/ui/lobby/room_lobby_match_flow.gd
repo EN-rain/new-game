@@ -34,6 +34,9 @@ func setup(
 
 
 func enter_lobby() -> void:
+	_is_transitioning = false
+	if MultiplayerManager.match_phase != "lobby":
+		MultiplayerManager.match_phase = "lobby"
 	if is_instance_valid(_room_code_button):
 		_room_code_button.text = MultiplayerManager.room_code
 		_party_controller.bootstrap_party_entries()

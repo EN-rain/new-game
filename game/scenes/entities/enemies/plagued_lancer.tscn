@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b2fhc13ouapkd"]
 
 [ext_resource type="Texture2D" uid="uid://biq0hy3wr1jd1" path="res://assets/sprites/Mobs/Plagued Lancer/attack01.png" id="1_0w26a"]
-[ext_resource type="Script" path="res://scripts/entities/enemies/mob_behavior_tree/main/bt_enemy.gd" id="1_6rj3g"]
+[ext_resource type="Script" uid="uid://b5ngxny3b0dlj" path="res://scripts/entities/enemies/mob_behavior_tree/main/bt_enemy.gd" id="1_6rj3g"]
 [ext_resource type="Texture2D" uid="uid://jo1b1tj8wc82" path="res://assets/sprites/Mobs/Plagued Lancer/idle01.png" id="1_nfew5"]
 [ext_resource type="Texture2D" uid="uid://ckb0872rd3itj" path="res://assets/sprites/Mobs/Plagued Lancer/idle02.png" id="2_4nm55"]
 [ext_resource type="Texture2D" uid="uid://t7wnumi7mw0s" path="res://assets/sprites/Mobs/Plagued Lancer/attack02.png" id="2_6rj3g"]
@@ -25,7 +25,7 @@
 [ext_resource type="Texture2D" uid="uid://jqkaqwwceh3g" path="res://assets/sprites/Mobs/Plagued Lancer/walk04.png" id="27_ww2fq"]
 [ext_resource type="Texture2D" uid="uid://bbjg7yko6gir4" path="res://assets/sprites/Mobs/Plagued Lancer/walk05.png" id="28_yoavi"]
 [ext_resource type="Texture2D" uid="uid://b343gsfiopxgs" path="res://assets/sprites/Mobs/Plagued Lancer/walk06.png" id="29_tqndv"]
-[ext_resource type="BehaviorTree" path="res://scripts/entities/enemies/mob_behavior_tree/lancer/lancer_bt.tres" id="30_bt"]
+[ext_resource type="BehaviorTree" uid="uid://dj6tdoi25iut4" path="res://scripts/entities/enemies/mob_behavior_tree/lancer/lancer_bt.tres" id="30_bt"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_21161"]
 animations = [{
@@ -162,23 +162,19 @@ color_ramp = SubResource("GradientTexture1D_6rj3g")
 offsets = PackedFloat32Array(0, 0.5, 1)
 colors = PackedColorArray(1, 0.3, 0.3, 1, 1, 0.5, 0.2, 0.8, 1, 0.2, 0.2, 0)
 
+[sub_resource type="BlackboardPlan" id="BlackboardPlan_al76w"]
+
 [node name="PlaguedLancer" type="CharacterBody2D" unique_id=303467806 groups=["elite_mob", "enemy"]]
 scale = Vector2(0.6, 0.6)
 collision_layer = 8
-collision_mask = 2
 script = ExtResource("1_6rj3g")
 behavior_tree = ExtResource("30_bt")
 attacker_display_name = "Plagued Lancer"
-speed = 60.0
-stop_distance = 10.0
-contact_damage = 10
-damage_cooldown = 1.0
-knockback_force = 300.0
-knockback_decay = 500.0
+stop_distance = 28.0
 max_health = 100
 xp_value = 25
-teleport_distance = 10.0
-blink_cooldown = 3.0
+teleport_distance = 30.0
+can_yield_chase_to_blink = true
 melee_hit_timing = 0.5
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=624162675]
@@ -235,7 +231,7 @@ script = ExtResource("24_ae6dh")
 
 [node name="DamageTimer" type="Timer" parent="." unique_id=1736281962]
 
-[node name="AttackAnimationTimer" type="Timer" parent="."]
+[node name="AttackAnimationTimer" type="Timer" parent="." unique_id=1186328960]
 one_shot = true
 
 [node name="HealthBarHideTimer" type="Timer" parent="." unique_id=324418883]
@@ -247,12 +243,9 @@ wait_time = 5.0
 position = Vector2(0, -10)
 emitting = false
 amount = 15
-lifetime = 1.0
-one_shot = false
 explosiveness = 0.1
 local_coords = true
 direction = Vector2(0, -1)
-spread = 45.0
 gravity = Vector2(0, 0)
 initial_velocity_min = 10.0
 initial_velocity_max = 25.0
@@ -262,5 +255,6 @@ scale_amount_min = 3.0
 scale_amount_max = 6.0
 color_ramp = SubResource("Gradient_vuln")
 
-[node name="BTPlayer" type="BTPlayer" parent="."]
+[node name="BTPlayer" type="BTPlayer" parent="." unique_id=1300016682]
 behavior_tree = ExtResource("30_bt")
+blackboard_plan = SubResource("BlackboardPlan_al76w")

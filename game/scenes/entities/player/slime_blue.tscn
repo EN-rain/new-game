@@ -130,6 +130,7 @@ height = 52.0
 
 [node name="SlimeBlue" type="CharacterBody2D" unique_id=1139583085 groups=["player"]]
 y_sort_enabled = true
+position = Vector2(0, -8.999998)
 scale = Vector2(0.4, 0.4)
 script = ExtResource("13_script")
 slash_effect_scene = ExtResource("21_slash")

@@ -26,9 +26,11 @@ func _tick(_p_delta: float) -> Status:
 		boss.player.apply_status_effect("rooted", duration)
 	else:
 		# Fallback: disable physics briefly
-		boss.player.set_physics_process(false)
+		var target := boss.player
+		target.set_physics_process(false)
 		await boss.get_tree().create_timer(duration).timeout
-		boss.player.set_physics_process(true)
+		if target != null and is_instance_valid(target):
+			target.set_physics_process(true)
 	
 	boss.set_skill_cooldown("dark_chains", cooldown)
 	print("[VoidWarden] Dark Chains! Duration: %.1f" % duration)

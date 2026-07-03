@@ -136,6 +136,7 @@ func take_damage(amount: int):
 	if is_taking_damage or is_dying:
 		return
 	
+	amount = _apply_incoming_damage_modifiers(amount)
 	var was_killed = health.take_damage(amount)
 	
 	if not was_killed:
@@ -248,3 +249,9 @@ func _pick_idle_target() -> void:
 		random_offset = Vector2.RIGHT.rotated(randf() * TAU) * 16.0
 	_idle_target = global_position + random_offset
 	_has_idle_target = true
+
+
+func _apply_incoming_damage_modifiers(amount: int) -> int:
+	if has_meta("damage_modifier"):
+		amount = int(round(float(amount) * float(get_meta("damage_modifier"))))
+	return maxi(1, amount)
