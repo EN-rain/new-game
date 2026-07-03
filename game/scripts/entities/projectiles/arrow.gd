@@ -84,7 +84,7 @@ func _on_body_entered(body):
 		
 		queue_free()
 	else:
-		# Hit a wall or TileMapLayer — destroy arrow
+		# Hit a wall or TileMapLayer - destroy arrow
 		# (TileMapLayer doesn't expose collision_layer, so we skip the layer check)
 		has_hit = true
 		queue_free()

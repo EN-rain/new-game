@@ -1,7 +1,7 @@
-[gd_scene format=3 uid="uid://cxeae6px2odmc"]
+[gd_scene format=3 uid="uid://c65ffa0ew0sco"]
 
 [ext_resource type="PackedScene" uid="uid://212bgn1oxjjc" path="res://scenes/levels/environment.tscn" id="2_env"]
-[ext_resource type="PackedScene" path="res://scenes/ui/hud_ui.tscn" id="3_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_ui_multiplayer.tscn" id="3_hud"]
 [ext_resource type="PackedScene" uid="uid://dcv73vimtuhsq" path="res://scenes/entities/player/slime_blue.tscn" id="4_player"]
 [ext_resource type="PackedScene" uid="uid://ndd30h5ijflg" path="res://scenes/ui/pause_menu.tscn" id="5_pause"]
 [ext_resource type="Script" uid="uid://jx31lxl2ga28" path="res://scripts/systems/game/main.gd" id="6_mainscript"]
@@ -22,7 +22,6 @@ warden_mob_scene = ExtResource("10_warden")
 [node name="Environment" parent="." unique_id=1978563765 instance=ExtResource("2_env")]
 
 [node name="HUD" parent="." unique_id=1617366584 instance=ExtResource("3_hud")]
-block_input_when_overlay_open = true
 
 [node name="PauseMenu" parent="." unique_id=1429287246 instance=ExtResource("5_pause")]
 visible = false

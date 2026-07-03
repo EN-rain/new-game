@@ -12,6 +12,7 @@ mouse_default_cursor_shape = 2
 text = ""
 flat = true
 script = ExtResource("1_skilltreecard")
+use_type_colors = true
 
 [node name="Container" type="VBoxContainer" parent="."]
 layout_mode = 1

@@ -47,7 +47,7 @@ func take_damage(amount: int) -> bool:
 	current_health -= amount
 	current_health = max(0, current_health)
 	
-	# Enter combat state — pauses regen
+	# Enter combat state - pauses regen
 	_is_in_combat = true
 	_combat_timer = 2.0
 	

@@ -17,13 +17,15 @@ extends Control
 @export_file("*.tscn") var main_game_scene_path: String = "res://scenes/levels/main.tscn"
 @export_file("*.tscn") var room_lobby_scene_path: String = "res://scenes/ui/room_lobby.tscn"
 @export_file("*.tscn") var save_slots_scene_path: String = "res://scenes/ui/save_slots_ui.tscn"
+@export var show_multiplayer_controls: bool = false
 @export var default_player_name_prefix: String = "Player"
 @export var offline_account_name: String = "Offline"
 @export var account_label_format: String = "Account: %s"
 @export var default_status_color: Color = Color(0.6, 0.62, 0.75, 0.7)
-@export var signed_in_status_text: String = "Signed in. Multiplayer ready."
+@export var solo_status_text: String = "Solo mode ready."
+@export var signed_in_status_text: String = "Ready."
 @export var signed_in_status_color: Color = Color(0.2, 0.8, 0.55)
-@export var offline_status_text: String = "Offline mode. Multiplayer requires sign-in."
+@export var offline_status_text: String = "Ready."
 @export var offline_status_color: Color = Color(0.9, 0.7, 0.3)
 @export var preparing_solo_run_text: String = "Preparing solo run..."
 @export var preparing_solo_run_color: Color = Color(0.4, 0.65, 0.9)
@@ -79,13 +81,30 @@ func _update_auth_ui() -> void:
 	logout_button.disabled = _menu_busy or not authenticated
 	start_button.disabled = _menu_busy
 	load_button.disabled = _menu_busy
-	host_button.disabled = _menu_busy or not authenticated
-	connect_button.disabled = _menu_busy or not authenticated
+	_apply_multiplayer_visibility(authenticated)
+
+	if not show_multiplayer_controls:
+		_set_status(solo_status_text, signed_in_status_color)
+		return
 
 	if authenticated:
 		_set_status(signed_in_status_text, signed_in_status_color)
 	else:
 		_set_status(offline_status_text, offline_status_color)
+
+func _apply_multiplayer_visibility(authenticated: bool) -> void:
+	var account_row := account_label.get_parent() as Control
+	if account_row != null:
+		account_row.visible = show_multiplayer_controls
+	host_button.visible = show_multiplayer_controls
+	var join_row := code_input.get_parent() as Control
+	if join_row != null:
+		join_row.visible = show_multiplayer_controls
+
+	logout_button.disabled = _menu_busy or not authenticated or not show_multiplayer_controls
+	host_button.disabled = _menu_busy or not authenticated or not show_multiplayer_controls
+	connect_button.disabled = _menu_busy or not authenticated or not show_multiplayer_controls
+	code_input.editable = show_multiplayer_controls
 
 func _get_ign() -> String:
 	var ign = ign_input.text.strip_edges()
@@ -118,6 +137,8 @@ func _on_ign_submitted(_text: String) -> void:
 
 
 func _on_code_submitted(_text: String) -> void:
+	if not show_multiplayer_controls:
+		return
 	if code_input != null:
 		code_input.release_focus()
 	if connect_button != null and not connect_button.disabled:
@@ -181,6 +202,8 @@ func _on_save_slots_closed() -> void:
 		_save_slots_ui = null
 
 func _on_host_pressed() -> void:
+	if not show_multiplayer_controls:
+		return
 	_set_menu_busy(true)
 	_set_status(connecting_status_text, host_connecting_color)
 	await MultiplayerManager.disconnect_server()
@@ -202,6 +225,8 @@ func _on_host_pressed() -> void:
 	_set_menu_busy(false)
 
 func _on_connect_pressed() -> void:
+	if not show_multiplayer_controls:
+		return
 	var room_code = code_input.text.strip_edges()
 	if room_code.is_empty():
 		_set_status(room_code_required_text, warning_status_color)

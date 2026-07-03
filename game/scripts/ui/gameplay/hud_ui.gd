@@ -6,8 +6,8 @@ extends CanvasLayer
 @onready var death_screen: Control = %Death
 @onready var skills_root: HudSkillBar = %Skills
 @onready var stats_panel: HudStatsPanel = $Stats
-@onready var chat_box: Control = %ChatBox
-@onready var player_info_panel: PanelContainer = %OtherPlayerInfo
+@onready var chat_box: Control = get_node_or_null("ChatBox") as Control
+@onready var player_info_panel: PanelContainer = get_node_or_null("Control/OtherPlayerInfo") as PanelContainer
 
 const DisconnectOverlayScene := preload("res://scenes/ui/disconnect_overlay.tscn")
 const BossHealthBarScene := preload("res://scenes/ui/boss_health_bar.tscn")
@@ -258,6 +258,8 @@ func toggle_chat() -> void:
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ENTER and not has_blocking_overlay_open():
+			if chat_box == null:
+				return
 			if chat_box != null and chat_box.visible:
 				return  # Let chat box handle Enter
 			toggle_chat()
@@ -269,7 +271,7 @@ func _process(delta: float) -> void:
 		_disconnect_timer += delta
 		if _disconnect_label != null:
 			var dots = ".".repeat(int(_disconnect_timer * 2) % 4)
-			_disconnect_label.text = "Connection Lost — Reconnecting%s" % dots
+			_disconnect_label.text = "Connection Lost - Reconnecting%s" % dots
 	_update_boss_health_bar()
 
 
@@ -354,6 +356,6 @@ func _on_boss_died() -> void:
 
 
 func on_player_revived() -> void:
-	# Called when player auto-revives via revive stone — hide death overlay
+	# Called when player auto-revives via revive stone - hide death overlay
 	if death_screen != null and death_screen.has_method("_hide_death_screen"):
 		death_screen._hide_death_screen()

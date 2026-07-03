@@ -146,7 +146,7 @@ func get_slot_summary(slot: int) -> Dictionary:
 	return {
 		"slot": slot,
 		"slot_name": get_slot_name(slot),
-		"class_name": str(snapshot.get("player_class_name", "—")),
+		"class_name": str(snapshot.get("player_class_name", "-")),
 		"level": int(snapshot.get("player_level", 1)),
 		"round": int(snapshot.get("round", 1)),
 		"coins": int(snapshot.get("coins", 0)),

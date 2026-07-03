@@ -15,6 +15,9 @@ game/addons/
 # Build artifacts (regenerate from Godot)
 exports/
 
+# Local Godot runtime test harnesses
+game/tests/
+
 # IDE settings
 .vscode/
 .windsurf/skills/

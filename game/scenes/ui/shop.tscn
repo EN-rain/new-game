@@ -44,7 +44,7 @@ layout_mode = 2
 [node name="TitleLabel" type="Label" parent="Panel/VBox/Header" unique_id=1605193949]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "🏪 SHOP"
+text = "SHOP"
 
 [node name="CoinsLabel" type="Label" parent="Panel/VBox/Header" unique_id=1592584335]
 unique_name_in_owner = true

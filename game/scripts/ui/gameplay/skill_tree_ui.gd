@@ -11,8 +11,26 @@ const TYPE_COLORS := {
 	SkillDefinition.SkillType.SPECIAL: Color(0.98, 0.72, 0.28, 1.0),
 }
 
+const TREE_TIER_ORDER := [
+	SkillDefinition.SkillType.STAT,
+	SkillDefinition.SkillType.ABILITY,
+	SkillDefinition.SkillType.PASSIVE,
+	SkillDefinition.SkillType.SPECIAL,
+]
+
+const TREE_TIER_LABELS := {
+	SkillDefinition.SkillType.STAT: "Tier 1 - Core Stats",
+	SkillDefinition.SkillType.ABILITY: "Tier 2 - Active Skills",
+	SkillDefinition.SkillType.PASSIVE: "Tier 3 - Passive Upgrades",
+	SkillDefinition.SkillType.SPECIAL: "Tier 4 - Specialization",
+}
+
+const SOLO_TREE_CARD_MIN_SIZE := Vector2(130, 150)
+const SOLO_TREE_BRANCH_COUNT := 3
+
 @export var skill_card_scene: PackedScene
 @export var tab_content_scene: PackedScene
+@export var use_custom_colors: bool = false
 
 @onready var title_label: Label = %TitleLabel
 @onready var sp_label: Label = %SpLabel
@@ -224,10 +242,13 @@ func _add_tree_tab(tab_name: String, main_class_id: String, tree_key: String) ->
 
 	var registry = _skill_registry()
 	var skills = registry.get_skills_for_tree(main_class_id, tree_key) if registry != null else []
-	for skill in skills:
-		var card := _create_skill_card(skill, tree_key)
-		if card != null:
-			grid.add_child(card)
+	if use_custom_colors:
+		for skill in skills:
+			var card := _create_skill_card(skill, tree_key)
+			if card != null:
+				grid.add_child(card)
+	else:
+		_populate_tiered_tree(grid, skills, tree_key)
 
 	tab_container.add_child(root)
 	tab_container.set_tab_title(tab_container.get_tab_count() - 1, tab_name)
@@ -242,6 +263,123 @@ func _instantiate_tab_content() -> SkillTreeTabContent:
 		push_warning("[SkillTreeUI] Failed to instantiate SkillTreeTabContent.")
 		return null
 	return content
+
+
+func _populate_tiered_tree(container: Control, skills: Array, tree_key: String) -> void:
+	if container == null:
+		return
+	var grouped := _group_skills_by_tier(skills)
+	var stats: Array = grouped.get(SkillDefinition.SkillType.STAT, [])
+	var abilities: Array = grouped.get(SkillDefinition.SkillType.ABILITY, [])
+	var passives: Array = grouped.get(SkillDefinition.SkillType.PASSIVE, [])
+	var specials: Array = grouped.get(SkillDefinition.SkillType.SPECIAL, [])
+
+	container.add_child(_create_tree_tier_label("Class Root"))
+	_add_scroll_row(container, stats.slice(0, min(SOLO_TREE_BRANCH_COUNT, stats.size())), tree_key)
+	container.add_child(_create_tree_connector())
+
+	var branch_row := HBoxContainer.new()
+	branch_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	branch_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	for branch_index in range(SOLO_TREE_BRANCH_COUNT):
+		var branch := VBoxContainer.new()
+		branch.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		branch.custom_minimum_size = Vector2(SOLO_TREE_CARD_MIN_SIZE.x, 0)
+		branch.alignment = BoxContainer.ALIGNMENT_BEGIN
+		branch.add_child(_create_tree_tier_label(_get_branch_label(branch_index)))
+		_add_branch_skills(branch, stats, branch_index, tree_key, SOLO_TREE_BRANCH_COUNT)
+		_add_branch_skills(branch, abilities, branch_index, tree_key, SOLO_TREE_BRANCH_COUNT)
+		_add_branch_skills(branch, passives, branch_index, tree_key, SOLO_TREE_BRANCH_COUNT)
+		branch_row.add_child(branch)
+	container.add_child(branch_row)
+
+	if not specials.is_empty():
+		container.add_child(_create_tree_connector())
+		container.add_child(_create_tree_tier_label("Capstone Skills"))
+		_add_scroll_row(container, specials, tree_key)
+
+
+func _add_branch_skills(branch: VBoxContainer, skills: Array, branch_index: int, tree_key: String, branch_count: int) -> void:
+	var added := false
+	for skill_index in range(skills.size()):
+		if skill_index % branch_count != branch_index:
+			continue
+		if branch.get_child_count() > 1 or added:
+			branch.add_child(_create_tree_connector())
+		var card := _create_skill_card(skills[skill_index], tree_key)
+		if card != null:
+			card.custom_minimum_size = SOLO_TREE_CARD_MIN_SIZE
+			card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			branch.add_child(card)
+			added = true
+
+
+func _add_scroll_row(container: Control, skills: Array, tree_key: String) -> void:
+	if skills.is_empty():
+		return
+	var scroller := ScrollContainer.new()
+	scroller.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroller.custom_minimum_size = Vector2(0, SOLO_TREE_CARD_MIN_SIZE.y + 24.0)
+	scroller.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	scroller.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	for skill in skills:
+		var card := _create_skill_card(skill, tree_key)
+		if card != null:
+			card.custom_minimum_size = SOLO_TREE_CARD_MIN_SIZE
+			card.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+			row.add_child(card)
+	scroller.add_child(row)
+	container.add_child(scroller)
+
+
+func _group_skills_by_tier(skills: Array) -> Dictionary:
+	var grouped := {}
+	for tier_type in TREE_TIER_ORDER:
+		grouped[tier_type] = []
+	for skill in skills:
+		if skill == null:
+			continue
+		var skill_type := int(skill.skill_type)
+		if not grouped.has(skill_type):
+			grouped[skill_type] = []
+		grouped[skill_type].append(skill)
+	for tier_type in grouped.keys():
+		var tier_skills: Array = grouped[tier_type]
+		tier_skills.sort_custom(func(a, b) -> bool:
+			return str(a.display_name).nocasecmp_to(str(b.display_name)) < 0
+		)
+	return grouped
+
+
+func _create_tree_tier_label(label_text: Variant) -> Label:
+	var label := Label.new()
+	label.text = str(TREE_TIER_LABELS.get(label_text, label_text))
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	return label
+
+
+func _create_tree_connector() -> Label:
+	var label := Label.new()
+	label.text = "|"
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return label
+
+
+func _get_branch_label(branch_index: int) -> String:
+	match branch_index:
+		0:
+			return "Damage Branch"
+		1:
+			return "Survival Branch"
+		2:
+			return "Utility Branch"
+		_:
+			return "Branch"
 
 
 func _build_tab_header_text(tree_key: String) -> String:
@@ -261,9 +399,13 @@ func _create_skill_card(skill, tree_key: String) -> Control:
 	if card == null:
 		push_warning("[SkillTreeUI] Failed to instantiate SkillTreeCard.")
 		return null
-	card.configure(skill, tree_key, _build_skill_role_text(skill))
-	card.mouse_entered.connect(_show_tooltip.bind(skill.skill_id))
-	card.mouse_exited.connect(_hide_tooltip)
+	card.use_type_colors = use_custom_colors
+	var registry = _skill_registry()
+	var skill_icon: Texture2D = null
+	if registry != null:
+		skill_icon = registry.get_skill_icon(skill.skill_id) as Texture2D
+	card.configure(skill, tree_key, _build_skill_role_text(skill), skill_icon)
+	card.detail_requested.connect(_on_skill_detail_requested)
 	card.pressed.connect(_on_skill_card_pressed.bind(skill.skill_id))
 
 	_skill_card_refs[skill.skill_id] = {
@@ -345,6 +487,10 @@ func _hide_tooltip() -> void:
 	tooltip_panel.visible = false
 
 
+func _on_skill_detail_requested(skill_id: String) -> void:
+	_show_tooltip(skill_id)
+
+
 func _position_tooltip_for_skill(skill_id: String) -> void:
 	if not tooltip_panel.visible or not _skill_card_refs.has(skill_id):
 		return
@@ -408,6 +554,11 @@ func _on_skill_card_pressed(skill_id: String) -> void:
 	var skill = registry.get_skill(skill_id)
 	if skill == null:
 		return
+	var refs: Dictionary = _skill_card_refs.get(skill_id, {})
+	var tree_key := str(refs.get("tree_key", ""))
+	if tree_key != "main" and not _are_subclasses_effectively_unlocked():
+		_show_status("%s is still locked." % ClassManager.class_id_to_display_name(tree_key), Color(1, 0.55, 0.45, 1.0))
+		return
 
 	if _can_stage_invest(skill):
 		_stage_invest(skill)
@@ -446,7 +597,7 @@ func _on_action_slot_pressed(slot_index: int) -> void:
 
 func _show_status(message: String, color: Color) -> void:
 	status_label.text = message
-	status_label.modulate = color
+	status_label.modulate = color if use_custom_colors else Color.WHITE
 	status_timer.start()
 
 

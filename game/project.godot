@@ -36,6 +36,8 @@ CloudSaveManager="*res://scripts/globals/cloud_save_manager.gd"
 
 [display]
 
+window/size/viewport_width=1720
+window/size/viewport_height=900
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 

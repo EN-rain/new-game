@@ -17,6 +17,15 @@ script = ExtResource("1_detect")
 [sub_resource type="BTCondition" id="BTCondition_los"]
 script = ExtResource("2_los")
 
+[sub_resource type="BTCondition" id="BTCondition_in_range"]
+script = ExtResource("8_in_range")
+
+[sub_resource type="BTAction" id="BTAction_7yx3v"]
+script = ExtResource("5_attack")
+
+[sub_resource type="BTSequence" id="BTSequence_direct_attack"]
+children = [SubResource("BTCondition_in_range"), SubResource("BTAction_7yx3v")]
+
 [sub_resource type="BTCondition" id="BTCondition_can_blink"]
 script = ExtResource("3_can_blink")
 
@@ -28,15 +37,6 @@ script = ExtResource("5_attack")
 
 [sub_resource type="BTSequence" id="BTSequence_blink_attack"]
 children = [SubResource("BTCondition_can_blink"), SubResource("BTAction_teleport"), SubResource("BTAction_attack")]
-
-[sub_resource type="BTCondition" id="BTCondition_in_range"]
-script = ExtResource("8_in_range")
-
-[sub_resource type="BTAction" id="BTAction_7yx3v"]
-script = ExtResource("5_attack")
-
-[sub_resource type="BTSequence" id="BTSequence_direct_attack"]
-children = [SubResource("BTCondition_in_range"), SubResource("BTAction_7yx3v")]
 
 [sub_resource type="BTAction" id="BTAction_chase"]
 script = ExtResource("6_chase")

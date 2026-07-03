@@ -689,7 +689,7 @@ offset_right = 174.0
 offset_bottom = 60.0
 theme_override_colors/font_color = Color(0.82, 0.63, 0.44, 0.94)
 theme_override_font_sizes/font_size = 14
-text = "← Leave"
+text = "Leave"
 
 [node name="StartGame" type="Button" parent="." unique_id=672953285]
 unique_name_in_owner = true
@@ -711,7 +711,7 @@ theme_override_styles/normal = SubResource("btn_start_normal")
 theme_override_styles/pressed = SubResource("btn_start_pressed")
 theme_override_styles/hover = SubResource("btn_start_hover")
 theme_override_styles/disabled = SubResource("btn_start_disabled")
-text = "▶ Start Game"
+text = "Start Game"
 
 [node name="ChatBox" type="PanelContainer" parent="." unique_id=955636777]
 unique_name_in_owner = true
@@ -734,7 +734,7 @@ theme_override_constants/separation = 6
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.84, 0.44, 0.95)
 theme_override_font_sizes/font_size = 12
-text = "💬 CHAT"
+text = "CHAT"
 
 [node name="ChatLog" type="RichTextLabel" parent="ChatBox/VBox" unique_id=1175713416]
 unique_name_in_owner = true
@@ -1006,7 +1006,7 @@ theme_override_font_sizes/font_size = 22
 theme_override_styles/normal = SubResource("btn_arrow_normal")
 theme_override_styles/pressed = SubResource("btn_arrow_pressed")
 theme_override_styles/hover = SubResource("btn_arrow_hover")
-text = "◀"
+text = "<"
 
 [node name="RightButton" type="Button" parent="." unique_id=2078494455]
 unique_name_in_owner = true
@@ -1027,7 +1027,7 @@ theme_override_font_sizes/font_size = 22
 theme_override_styles/normal = SubResource("btn_arrow_normal")
 theme_override_styles/pressed = SubResource("btn_arrow_pressed")
 theme_override_styles/hover = SubResource("btn_arrow_hover")
-text = "▶"
+text = ">"
 
 [node name="Label" type="Label" parent="." unique_id=2103001564]
 unique_name_in_owner = true
@@ -1063,7 +1063,7 @@ grow_horizontal = 2
 grow_vertical = 0
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 13
-text = "🔒 Subclass unlocks at Level 10"
+text = "Subclass unlocks at Level 10"
 horizontal_alignment = 1
 
 [node name="LobbyNameEdit" type="LineEdit" parent="." unique_id=806834103]
@@ -1105,7 +1105,7 @@ theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("btn_select_normal")
 theme_override_styles/pressed = SubResource("btn_select_pressed")
 theme_override_styles/hover = SubResource("btn_select_hover")
-text = "✦ Select Class"
+text = "Select Class"
 
 [node name="Players" type="PanelContainer" parent="." unique_id=965899457]
 unique_name_in_owner = true
@@ -1129,7 +1129,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0, 0, 0.9)
 theme_override_font_sizes/font_size = 18
-text = "⚔ PLAYERS"
+text = "PLAYERS"
 
 [node name="PlayersList" type="VBoxContainer" parent="Players/VBox" unique_id=613267774]
 unique_name_in_owner = true
@@ -1140,7 +1140,7 @@ theme_override_constants/separation = 4
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0, 0, 0.92)
 theme_override_font_sizes/font_size = 20
-text = "👑 Player (You)"
+text = "Player (You)"
 
 [node name="Player2" type="Label" parent="Players/VBox/PlayersList" unique_id=348936909]
 layout_mode = 2

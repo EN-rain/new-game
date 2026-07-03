@@ -1,8 +1,8 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/ui/auth/solo_main_menu.gd" id="1_mainmenu"]
+[ext_resource type="Script" path="res://scripts/ui/auth/main_menu.gd" id="1_mainmenu"]
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenuMultiplayer" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -10,8 +10,11 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_mainmenu")
+auth_menu_scene_path = "res://scenes/ui/auth_menu.tscn"
 settings_scene_path = "res://scenes/ui/settings.tscn"
-main_game_scene_path = "res://scenes/levels/main.tscn"
+main_game_scene_path = "res://scenes/levels/main_multiplayer.tscn"
+room_lobby_scene_path = "res://scenes/ui/room_lobby.tscn"
+show_multiplayer_controls = true
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -20,23 +23,31 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
 
 [node name="Center" type="CenterContainer" parent="MarginContainer"]
 layout_mode = 2
 
 [node name="VBox" type="VBoxContainer" parent="MarginContainer/Center"]
-custom_minimum_size = Vector2(460, 0)
 layout_mode = 2
-theme_override_constants/separation = 12
 
 [node name="TitleLabel" type="Label" parent="MarginContainer/Center/VBox"]
 layout_mode = 2
 text = "Main Menu"
 horizontal_alignment = 1
+
+[node name="AccountRow" type="HBoxContainer" parent="MarginContainer/Center/VBox"]
+layout_mode = 2
+
+[node name="AccountLabel" type="Label" parent="MarginContainer/Center/VBox/AccountRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Account: Offline"
+
+[node name="LogoutButton" type="Button" parent="MarginContainer/Center/VBox/AccountRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Logout"
 
 [node name="HeaderLabel" type="Label" parent="MarginContainer/Center/VBox"]
 layout_mode = 2
@@ -59,9 +70,29 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Load"
 
+[node name="HostButton" type="Button" parent="MarginContainer/Center/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Host Game"
+
+[node name="JoinHBox" type="HBoxContainer" parent="MarginContainer/Center/VBox"]
+layout_mode = 2
+
+[node name="CodeInput" type="LineEdit" parent="MarginContainer/Center/VBox/JoinHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 1
+placeholder_text = "Room code..."
+max_length = 50
+
+[node name="ConnectButton" type="Button" parent="MarginContainer/Center/VBox/JoinHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Join"
+
 [node name="StatusLabel" type="Label" parent="MarginContainer/Center/VBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 text = ""
 autowrap_mode = 2
@@ -76,8 +107,12 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Quit"
 
+[connection signal="pressed" from="MarginContainer/Center/VBox/AccountRow/LogoutButton" to="." method="_on_logout_pressed"]
 [connection signal="pressed" from="MarginContainer/Center/VBox/StartButton" to="." method="_on_start_pressed"]
 [connection signal="pressed" from="MarginContainer/Center/VBox/LoadButton" to="." method="_on_load_pressed"]
+[connection signal="pressed" from="MarginContainer/Center/VBox/HostButton" to="." method="_on_host_pressed"]
+[connection signal="pressed" from="MarginContainer/Center/VBox/JoinHBox/ConnectButton" to="." method="_on_connect_pressed"]
 [connection signal="pressed" from="MarginContainer/Center/VBox/SettingsButton" to="." method="_on_settings_pressed"]
 [connection signal="pressed" from="MarginContainer/Center/VBox/QuitButton" to="." method="_on_quit_pressed"]
 [connection signal="text_submitted" from="MarginContainer/Center/VBox/IGNInput" to="." method="_on_ign_submitted"]
+[connection signal="text_submitted" from="MarginContainer/Center/VBox/JoinHBox/CodeInput" to="." method="_on_code_submitted"]

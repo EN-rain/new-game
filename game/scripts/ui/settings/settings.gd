@@ -365,7 +365,7 @@ func _input(event: InputEvent) -> void:
 
 	# Accept keyboard or mouse button events for binding
 	if event is InputEventKey and event.pressed and not event.echo:
-		# Ignore Escape — use it to cancel
+		# Ignore Escape - use it to cancel
 		if event.physical_keycode == KEY_ESCAPE:
 			_cancel_keybind_listen()
 			get_viewport().set_input_as_handled()
@@ -450,7 +450,7 @@ func _string_to_event(text: String) -> InputEvent:
 			ev.button_index = MOUSE_BUTTON_MIDDLE
 			return ev
 
-	# Handle keyboard keys — try physical keycode lookup
+	# Handle keyboard keys - try physical keycode lookup
 	var key_event := InputEventKey.new()
 	# Common key name to physical keycode mapping
 	var key_map: Dictionary = {

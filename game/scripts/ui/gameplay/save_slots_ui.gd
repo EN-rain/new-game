@@ -109,7 +109,7 @@ func _create_slot_card(slot_num: int, summary: Dictionary) -> PanelContainer:
 	else:
 		var class_level := Label.new()
 		class_level.text = "%s  Lv.%d  Round %d" % [
-			str(summary.get("class_name", "—")),
+			str(summary.get("class_name", "-")),
 			int(summary.get("level", 1)),
 			int(summary.get("round", 1))
 		]
@@ -158,7 +158,7 @@ func _create_slot_card(slot_num: int, summary: Dictionary) -> PanelContainer:
 
 		# Rename button
 		var rename_btn := Button.new()
-		rename_btn.text = "✎"
+		rename_btn.text = "Rename"
 		rename_btn.add_theme_font_size_override("font_size", 12)
 		rename_btn.tooltip_text = "Rename this slot"
 		rename_btn.pressed.connect(_on_rename_slot.bind(slot_num))
@@ -166,7 +166,7 @@ func _create_slot_card(slot_num: int, summary: Dictionary) -> PanelContainer:
 
 		# Delete button
 		var delete_btn := Button.new()
-		delete_btn.text = "✕"
+		delete_btn.text = "Delete"
 		delete_btn.add_theme_font_size_override("font_size", 12)
 		delete_btn.add_theme_color_override("font_color", Color(0.9, 0.4, 0.4))
 		delete_btn.tooltip_text = "Delete this save"
@@ -176,7 +176,7 @@ func _create_slot_card(slot_num: int, summary: Dictionary) -> PanelContainer:
 	return card
 
 
-# ── Actions ────────────────────────────────────────────────
+# Actions
 
 func _on_save_slot(slot: int, mode: String) -> void:
 	if _busy:
@@ -274,7 +274,7 @@ func _rename_cloud_slot(slot: int, new_name: String) -> void:
 		_set_status("Rename failed: %s" % str(result.get("error", "")), Color(0.9, 0.4, 0.4))
 
 
-# ── Quick Save ──────────────────────────────────────────────
+# Quick Save
 
 func _on_auto_save_pressed() -> void:
 	if _busy:
@@ -291,7 +291,7 @@ func _on_auto_save_pressed() -> void:
 		_set_status("Quick save failed: %s" % str(result.get("error", "")), Color(0.9, 0.4, 0.4))
 
 
-# ── Close ───────────────────────────────────────────────────
+# Close
 
 func _on_close_pressed() -> void:
 	closed.emit()

@@ -27,6 +27,7 @@ const LOCAL_PLAYER_SPAWN_FADE_TIME := 0.35
 const SOLO_CLASS_SELECTION_NODE_PATH := "SoloClassSelection"
 const DEBUG_STATS_LABEL_NODE_PATH := "Control/DebugStatsLabel"
 const DEBUG_MAIN_LOGS := false
+const ROUND_START_POPUP_DELAY_SEC := 4.8
 
 var _solo_class_selection_ui: ClassSelectionUI = null
 var _solo_class_locked: bool = false
@@ -515,7 +516,7 @@ func _on_match_state(match_state):
 			MultiplayerUtils.send_player_info(MultiplayerManager.player_ign, MultiplayerManager.is_host)
 		
 		"enemy_hit":
-			# Remote player hit an enemy — apply damage to matching local enemy
+			# Remote player hit an enemy - apply damage to matching local enemy
 			var hit_sender_id := str(data.get("user_id", ""))
 			if hit_sender_id.is_empty() or MultiplayerUtils.is_local_player(hit_sender_id):
 				return  # Skip own hits (already applied locally)
@@ -773,7 +774,7 @@ func _start_round(round_number: int, show_popup: bool) -> void:
 			if tree == null:
 				_starting_round_transition = false
 				return
-			await tree.create_timer(1.7).timeout
+			await tree.create_timer(ROUND_START_POPUP_DELAY_SEC).timeout
 			if not is_inside_tree() or is_queued_for_deletion() or mob_spawner == null:
 				_starting_round_transition = false
 				return

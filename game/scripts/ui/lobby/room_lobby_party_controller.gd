@@ -2,7 +2,7 @@ extends Node
 class_name RoomLobbyPartyController
 
 
-const CROWN_EMOJI = "👑 "
+const CROWN_EMOJI = ""
 
 @export var system_sender_name: String = "System"
 @export var lobby_welcome_message: String = "Welcome to the lobby!"

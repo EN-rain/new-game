@@ -2,7 +2,7 @@ extends MarginContainer
 class_name SkillTreeTabContent
 
 @onready var header_label: Label = %HeaderLabel
-@onready var skill_grid: GridContainer = %SkillGrid
+@onready var skill_grid: Control = %SkillGrid
 
 
 func _ensure_ui_refs() -> void:
@@ -18,6 +18,6 @@ func set_header_text(text: String) -> void:
 		header_label.text = text
 
 
-func get_skill_grid() -> GridContainer:
+func get_skill_grid() -> Control:
 	_ensure_ui_refs()
 	return skill_grid

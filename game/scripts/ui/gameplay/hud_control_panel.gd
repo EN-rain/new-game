@@ -3,8 +3,8 @@ class_name HudControlPanel
 
 const SCORE_FORMAT := "Score: %d"
 const ROUND_POPUP_FADE_IN_SEC := 0.25
-const ROUND_POPUP_HOLD_SEC := 3.0
-const ROUND_POPUP_FADE_OUT_SEC := 0.45
+const ROUND_POPUP_HOLD_SEC := 4.0
+const ROUND_POPUP_FADE_OUT_SEC := 0.6
 
 @onready var player_stats_root: Control = $PlayerStats
 @onready var players_root: Control = $Players
@@ -25,6 +25,7 @@ var current_score: int = 0
 var _overlay_pause_active: bool = false
 var _round_popup_tween: Tween
 var _block_input_when_overlay_open: bool = false
+var _paused_by_overlay: bool = false
 
 
 func _ready() -> void:
@@ -91,17 +92,35 @@ func show_round_level(round_number: int, added_mobs: int, profile: Dictionary) -
 	round_level_label.modulate = Color(1, 1, 1, 0)
 	round_level_label.scale = Vector2(0.92, 0.92)
 
+	_show_round_popup_sequence()
+
+
+func _show_round_popup_sequence() -> void:
+	var label := round_level_label
+	if label == null:
+		return
+
 	_round_popup_tween = create_tween()
 	_round_popup_tween.set_trans(Tween.TRANS_CUBIC)
 	_round_popup_tween.set_ease(Tween.EASE_OUT)
 	_round_popup_tween.set_parallel(true)
-	_round_popup_tween.tween_property(round_level_label, "modulate", Color.WHITE, ROUND_POPUP_FADE_IN_SEC)
-	_round_popup_tween.tween_property(round_level_label, "scale", Vector2.ONE, ROUND_POPUP_FADE_IN_SEC)
-	_round_popup_tween.chain().tween_interval(ROUND_POPUP_HOLD_SEC)
-	_round_popup_tween.chain().set_parallel(true)
-	_round_popup_tween.tween_property(round_level_label, "modulate", Color(1, 1, 1, 0), ROUND_POPUP_FADE_OUT_SEC)
-	_round_popup_tween.tween_property(round_level_label, "scale", Vector2(1.04, 1.04), ROUND_POPUP_FADE_OUT_SEC)
-	_round_popup_tween.finished.connect(_on_round_popup_finished)
+	_round_popup_tween.tween_property(label, "modulate", Color.WHITE, ROUND_POPUP_FADE_IN_SEC)
+	_round_popup_tween.tween_property(label, "scale", Vector2.ONE, ROUND_POPUP_FADE_IN_SEC)
+	await _round_popup_tween.finished
+
+	await get_tree().create_timer(ROUND_POPUP_HOLD_SEC).timeout
+	if label != round_level_label or not label.visible:
+		return
+
+	_round_popup_tween = create_tween()
+	_round_popup_tween.set_trans(Tween.TRANS_CUBIC)
+	_round_popup_tween.set_ease(Tween.EASE_IN)
+	_round_popup_tween.set_parallel(true)
+	_round_popup_tween.tween_property(label, "modulate", Color(1, 1, 1, 0), ROUND_POPUP_FADE_OUT_SEC)
+	_round_popup_tween.tween_property(label, "scale", Vector2(1.04, 1.04), ROUND_POPUP_FADE_OUT_SEC)
+	await _round_popup_tween.finished
+	if label == round_level_label:
+		_on_round_popup_finished()
 
 
 func _on_round_popup_finished() -> void:
@@ -149,6 +168,16 @@ func _on_overlay_closed() -> void:
 func _update_overlay_pause() -> void:
 	_overlay_pause_active = _block_input_when_overlay_open and _is_overlay_open()
 	var overlay_open := _is_overlay_open()
+	if _block_input_when_overlay_open:
+		if overlay_open and not get_tree().paused:
+			get_tree().paused = true
+			_paused_by_overlay = true
+		elif not overlay_open and _paused_by_overlay:
+			get_tree().paused = false
+			_paused_by_overlay = false
+	elif _paused_by_overlay:
+		get_tree().paused = false
+		_paused_by_overlay = false
 	if skills_root != null:
 		skills_root.visible = not overlay_open
 	if stats_root != null:
