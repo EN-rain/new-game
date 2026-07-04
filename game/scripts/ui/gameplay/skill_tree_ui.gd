@@ -1,3 +1,4 @@
+@tool
 extends Control
 class_name SkillTreeUI
 
@@ -25,12 +26,14 @@ const TREE_TIER_LABELS := {
 	SkillDefinition.SkillType.SPECIAL: "Tier 4 - Specialization",
 }
 
-const SOLO_TREE_CARD_MIN_SIZE := Vector2(130, 150)
+const SOLO_TREE_CARD_MIN_SIZE := Vector2(156, 176)
 const SOLO_TREE_BRANCH_COUNT := 3
+const SOLO_TREE_SPACING := 24
 
 @export var skill_card_scene: PackedScene
 @export var tab_content_scene: PackedScene
 @export var use_custom_colors: bool = false
+@export var editor_main_class_id: String = "dps"
 
 @onready var title_label: Label = %TitleLabel
 @onready var sp_label: Label = %SpLabel
@@ -73,6 +76,9 @@ static func skill_type_to_text(skill_type: int) -> String:
 
 func _ready() -> void:
 	tooltip_panel.visible = false
+	if Engine.is_editor_hint():
+		_refresh_all.call_deferred()
+		return
 	if not status_timer.timeout.is_connected(_on_status_timeout):
 		status_timer.timeout.connect(_on_status_timeout)
 	_setup_action_bar()
@@ -81,6 +87,8 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
 	if visible:
 		_refresh_action_bar_if_needed()
 
@@ -153,6 +161,8 @@ func _gui_input(_event: InputEvent) -> void:
 
 
 func _connect_signals() -> void:
+	if Engine.is_editor_hint():
+		return
 	var manager = _skill_tree_manager()
 	if manager == null:
 		return
@@ -171,6 +181,8 @@ func _connect_signals() -> void:
 
 
 func _setup_action_bar() -> void:
+	if Engine.is_editor_hint():
+		return
 	_slot_buttons = [action_slot_1, action_slot_2, action_slot_3, action_slot_4]
 	for slot_index in range(_slot_buttons.size()):
 		var button := _slot_buttons[slot_index]
@@ -190,12 +202,19 @@ func _refresh_all() -> void:
 
 
 func _refresh_sp_label() -> void:
+	if Engine.is_editor_hint():
+		sp_label.text = "SP 0 / 0"
+		return
 	var manager = _skill_tree_manager()
 	sp_label.text = "SP %d / %d" % [_get_effective_sp_available(), manager.get_total_sp_earned()] if manager != null else "SP 0 / 0"
 
 
 func _refresh_apply_button() -> void:
 	if apply_button == null:
+		return
+	if Engine.is_editor_hint():
+		apply_button.disabled = true
+		apply_button.text = "Apply"
 		return
 	var pending_points := _get_pending_point_count()
 	apply_button.disabled = pending_points <= 0
@@ -204,6 +223,9 @@ func _refresh_apply_button() -> void:
 
 func _refresh_bonus_label() -> void:
 	if bonus_label == null:
+		return
+	if Engine.is_editor_hint():
+		bonus_label.text = ""
 		return
 	var player_subclass: PlayerClass = MultiplayerManager.player_subclass
 	bonus_label.text = "" if player_subclass == null else _build_class_bonus_summary(player_subclass)
@@ -215,20 +237,27 @@ func _refresh_tabs() -> void:
 		child.queue_free()
 	_skill_card_refs.clear()
 
-	var main_class: PlayerClass = MultiplayerManager.player_class
-	if main_class == null:
+	var main_class_id := ""
+	if Engine.is_editor_hint():
+		main_class_id = editor_main_class_id.strip_edges().to_lower()
+		if main_class_id.is_empty():
+			main_class_id = "dps"
+	else:
+		var main_class: PlayerClass = MultiplayerManager.player_class
+		if main_class != null:
+			main_class_id = ClassManager.get_class_id(main_class)
+	if main_class_id.is_empty():
 		var empty_tab := _instantiate_tab_content()
 		if empty_tab == null:
 			return
-		empty_tab.set_header_text("Select a main class to unlock the skill tree.")
+		_set_tab_header_text(empty_tab, "Select a main class to unlock the skill tree.")
 		tab_container.add_child(empty_tab)
 		tab_container.set_tab_title(0, "Unavailable")
 		return
 
-	var main_class_id := ClassManager.get_class_id(main_class)
 	_add_tree_tab("Main", main_class_id, "main")
-	for subclass_id in ClassManager.get_subclass_ids_for_main_id(main_class_id):
-		_add_tree_tab(ClassManager.class_id_to_display_name(subclass_id), main_class_id, subclass_id)
+	for subclass_id in _get_subclass_ids_for_main_id(main_class_id):
+		_add_tree_tab(_class_id_to_display_name(subclass_id), main_class_id, subclass_id)
 	if tab_container.get_tab_count() > 0:
 		tab_container.current_tab = clampi(previous_tab, 0, tab_container.get_tab_count() - 1)
 
@@ -237,11 +266,13 @@ func _add_tree_tab(tab_name: String, main_class_id: String, tree_key: String) ->
 	var root := _instantiate_tab_content()
 	if root == null:
 		return
-	root.set_header_text(_build_tab_header_text(tree_key))
-	var grid := root.get_skill_grid()
+	_set_tab_header_text(root, _build_tab_header_text(tree_key))
+	var grid := _get_tab_skill_grid(root)
+	if grid == null:
+		root.queue_free()
+		return
 
-	var registry = _skill_registry()
-	var skills = registry.get_skills_for_tree(main_class_id, tree_key) if registry != null else []
+	var skills = _get_skills_for_tree(main_class_id, tree_key)
 	if use_custom_colors:
 		for skill in skills:
 			var card := _create_skill_card(skill, tree_key)
@@ -254,15 +285,37 @@ func _add_tree_tab(tab_name: String, main_class_id: String, tree_key: String) ->
 	tab_container.set_tab_title(tab_container.get_tab_count() - 1, tab_name)
 
 
-func _instantiate_tab_content() -> SkillTreeTabContent:
+func _instantiate_tab_content() -> Control:
 	if tab_content_scene == null:
 		push_warning("[SkillTreeUI] tab_content_scene is not assigned.")
 		return null
-	var content := tab_content_scene.instantiate() as SkillTreeTabContent
+	var content := tab_content_scene.instantiate() as Control
 	if content == null:
-		push_warning("[SkillTreeUI] Failed to instantiate SkillTreeTabContent.")
+		push_warning("[SkillTreeUI] Failed to instantiate tab content.")
 		return null
 	return content
+
+
+func _set_tab_header_text(tab_content: Control, text: String) -> void:
+	if tab_content == null:
+		return
+	if Engine.is_editor_hint():
+		var header_label := tab_content.get_node_or_null("%HeaderLabel") as Label
+		if header_label != null:
+			header_label.text = text
+		return
+	if tab_content.has_method("set_header_text"):
+		tab_content.call("set_header_text", text)
+
+
+func _get_tab_skill_grid(tab_content: Control) -> Control:
+	if tab_content == null:
+		return null
+	if Engine.is_editor_hint():
+		return tab_content.get_node_or_null("%SkillGrid") as Control
+	if tab_content.has_method("get_skill_grid"):
+		return tab_content.call("get_skill_grid") as Control
+	return null
 
 
 func _populate_tiered_tree(container: Control, skills: Array, tree_key: String) -> void:
@@ -281,11 +334,13 @@ func _populate_tiered_tree(container: Control, skills: Array, tree_key: String) 
 	var branch_row := HBoxContainer.new()
 	branch_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	branch_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	branch_row.add_theme_constant_override("separation", SOLO_TREE_SPACING)
 	for branch_index in range(SOLO_TREE_BRANCH_COUNT):
 		var branch := VBoxContainer.new()
 		branch.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		branch.custom_minimum_size = Vector2(SOLO_TREE_CARD_MIN_SIZE.x, 0)
 		branch.alignment = BoxContainer.ALIGNMENT_BEGIN
+		branch.add_theme_constant_override("separation", SOLO_TREE_SPACING)
 		branch.add_child(_create_tree_tier_label(_get_branch_label(branch_index)))
 		_add_branch_skills(branch, stats, branch_index, tree_key, SOLO_TREE_BRANCH_COUNT)
 		_add_branch_skills(branch, abilities, branch_index, tree_key, SOLO_TREE_BRANCH_COUNT)
@@ -325,6 +380,7 @@ func _add_scroll_row(container: Control, skills: Array, tree_key: String) -> voi
 	var row := HBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", SOLO_TREE_SPACING)
 	for skill in skills:
 		var card := _create_skill_card(skill, tree_key)
 		if card != null:
@@ -383,12 +439,16 @@ func _get_branch_label(branch_index: int) -> String:
 
 
 func _build_tab_header_text(tree_key: String) -> String:
+	if Engine.is_editor_hint():
+		if tree_key == "main":
+			return "Spend 20 SP in the main tree to unlock subclass tabs. [0 / 20]"
+		return "%s tree locked until 20 SP are invested in the main tree." % _class_id_to_display_name(tree_key)
 	if tree_key == "main":
 		return "Spend 20 SP in the main tree to unlock subclass tabs. [%d / %d]" % [_get_effective_main_tree_sp_spent(), 20]
 	var spent := _get_effective_subclass_sp_spent(tree_key)
 	if _are_subclasses_effectively_unlocked():
-		return "%s tree unlocked. %d / 30 SP invested." % [ClassManager.class_id_to_display_name(tree_key), spent]
-	return "%s tree locked until 20 SP are invested in the main tree." % ClassManager.class_id_to_display_name(tree_key)
+		return "%s tree unlocked. %d / 30 SP invested." % [_class_id_to_display_name(tree_key), spent]
+	return "%s tree locked until 20 SP are invested in the main tree." % _class_id_to_display_name(tree_key)
 
 
 func _create_skill_card(skill, tree_key: String) -> Control:
@@ -404,15 +464,20 @@ func _create_skill_card(skill, tree_key: String) -> Control:
 	var skill_icon: Texture2D = null
 	if registry != null:
 		skill_icon = registry.get_skill_icon(skill.skill_id) as Texture2D
+	if skill_icon == null and Engine.is_editor_hint():
+		skill_icon = _load_editor_skill_icon(skill)
 	card.configure(skill, tree_key, _build_skill_role_text(skill), skill_icon)
-	card.detail_requested.connect(_on_skill_detail_requested)
-	card.pressed.connect(_on_skill_card_pressed.bind(skill.skill_id))
+	if not Engine.is_editor_hint():
+		card.pressed.connect(_on_skill_card_pressed.bind(skill.skill_id))
 
 	_skill_card_refs[skill.skill_id] = {
 		"card": card,
 		"tree_key": tree_key,
 	}
-	_refresh_skill_card(skill.skill_id)
+	if Engine.is_editor_hint():
+		card.refresh_display(_summarize_skill(skill, 0), "Unlearned", 0, skill.max_level, true, false, false)
+	else:
+		_refresh_skill_card(skill.skill_id)
 	return card
 
 
@@ -487,10 +552,6 @@ func _hide_tooltip() -> void:
 	tooltip_panel.visible = false
 
 
-func _on_skill_detail_requested(skill_id: String) -> void:
-	_show_tooltip(skill_id)
-
-
 func _position_tooltip_for_skill(skill_id: String) -> void:
 	if not tooltip_panel.visible or not _skill_card_refs.has(skill_id):
 		return
@@ -557,7 +618,7 @@ func _on_skill_card_pressed(skill_id: String) -> void:
 	var refs: Dictionary = _skill_card_refs.get(skill_id, {})
 	var tree_key := str(refs.get("tree_key", ""))
 	if tree_key != "main" and not _are_subclasses_effectively_unlocked():
-		_show_status("%s is still locked." % ClassManager.class_id_to_display_name(tree_key), Color(1, 0.55, 0.45, 1.0))
+		_show_status("%s is still locked." % _class_id_to_display_name(tree_key), Color(1, 0.55, 0.45, 1.0))
 		return
 
 	if _can_stage_invest(skill):
@@ -629,7 +690,7 @@ func _on_subclasses_unlocked(_main_class: String) -> void:
 
 
 func _on_subclass_locked(subclass_key: String, reason: String) -> void:
-	var class_display_name := ClassManager.class_id_to_display_name(subclass_key)
+	var class_display_name := _class_id_to_display_name(subclass_key)
 	_show_status("%s reached its 30 SP cap." % class_display_name if reason == "subclass_cap_reached" else "%s is still locked." % class_display_name, Color(1, 0.55, 0.45, 1.0))
 
 
@@ -644,11 +705,136 @@ func _on_skill_not_learned(skill_id: String) -> void:
 
 
 func _skill_tree_manager() -> Node:
+	if Engine.is_editor_hint():
+		return null
 	return SkillTreeManager
 
 
 func _skill_registry() -> Node:
+	if Engine.is_editor_hint():
+		return null
 	return SkillRegistry
+
+
+func _get_skills_for_tree(main_class_id: String, tree_key: String) -> Array:
+	if Engine.is_editor_hint():
+		return _load_editor_skills_for_tree(main_class_id, tree_key)
+	var registry = _skill_registry()
+	return registry.get_skills_for_tree(main_class_id, tree_key) if registry != null else []
+
+
+func _load_editor_skills_for_tree(main_class_id: String, tree_key: String) -> Array:
+	var skill_dir := "res://resources/skills/%s/%s" % [main_class_id, tree_key]
+	var dir := DirAccess.open(skill_dir)
+	if dir == null:
+		return []
+	var skills: Array = []
+	dir.list_dir_begin()
+	var entry := dir.get_next()
+	while not entry.is_empty():
+		if entry.ends_with(".tres"):
+			var skill = load("%s/%s" % [skill_dir, entry])
+			if skill != null:
+				skills.append(skill)
+		entry = dir.get_next()
+	dir.list_dir_end()
+	skills.sort_custom(func(a, b) -> bool:
+		return str(a.skill_id) < str(b.skill_id)
+	)
+	return skills
+
+
+func _load_editor_skill_icon(skill) -> Texture2D:
+	if skill == null:
+		return null
+	var skill_id := str(skill.skill_id)
+	var parts := skill_id.split("_", false)
+	if parts.size() < 4:
+		return null
+	var folder_name := parts[0]
+	var resource_path := str(skill.resource_path).replace("\\", "/")
+	var path_segments := resource_path.split("/", false)
+	var skills_index := path_segments.find("skills")
+	if skills_index >= 0 and path_segments.size() > skills_index + 2:
+		var tree_key := str(path_segments[skills_index + 2])
+		folder_name = parts[0] if tree_key == "main" else tree_key
+	var icon_base := "_".join(parts.slice(2))
+	var icon_path := "res://assets/class_icons/%s/%s.png" % [folder_name, icon_base]
+	if ResourceLoader.exists(icon_path):
+		return load(icon_path) as Texture2D
+	return null
+
+
+func _get_subclass_ids_for_main_id(main_class_id: String) -> Array:
+	if Engine.is_editor_hint():
+		match main_class_id:
+			"tank":
+				return ["guardian", "berserker", "paladin"]
+			"dps":
+				return ["assassin", "ranger", "mage", "samurai"]
+			"support":
+				return ["cleric", "bard", "alchemist", "necromancer"]
+			"hybrid":
+				return ["spellblade", "shadow_knight", "monk"]
+			"controller":
+				return ["chronomancer", "warden", "hexbinder", "stormcaller"]
+			_:
+				return []
+	return ClassManager.get_subclass_ids_for_main_id(main_class_id)
+
+
+func _class_id_to_display_name(class_id: String) -> String:
+	if Engine.is_editor_hint():
+		match class_id:
+			"tank":
+				return "Tank"
+			"dps":
+				return "DPS"
+			"support":
+				return "Support"
+			"hybrid":
+				return "Hybrid"
+			"controller":
+				return "Controller"
+			"guardian":
+				return "Guardian"
+			"berserker":
+				return "Berserker"
+			"paladin":
+				return "Paladin"
+			"assassin":
+				return "Assassin"
+			"ranger":
+				return "Ranger"
+			"mage":
+				return "Mage"
+			"samurai":
+				return "Samurai"
+			"cleric":
+				return "Cleric"
+			"bard":
+				return "Bard"
+			"alchemist":
+				return "Alchemist"
+			"necromancer":
+				return "Necromancer"
+			"spellblade":
+				return "Spellblade"
+			"shadow_knight":
+				return "Shadow Knight"
+			"monk":
+				return "Monk"
+			"chronomancer":
+				return "Chronomancer"
+			"warden":
+				return "Warden"
+			"hexbinder":
+				return "Hexbinder"
+			"stormcaller":
+				return "Stormcaller"
+			_:
+				return class_id.capitalize()
+	return ClassManager.class_id_to_display_name(class_id)
 
 
 func _get_pending_point_count() -> int:

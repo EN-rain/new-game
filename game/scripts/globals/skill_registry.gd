@@ -126,9 +126,13 @@ func get_skill_icon(skill_id: String) -> Texture2D:
 	if folder_name.is_empty():
 		return null
 
-	var icon_base := _resolve_icon_base_name(resolved_skill_id)
-	var icon_path := "%s/%s/%s.png" % [SKILL_ICON_ROOT, folder_name, icon_base]
-	if not ResourceLoader.exists(icon_path):
+	var icon_path := ""
+	for icon_base in _resolve_icon_base_names(resolved_skill_id):
+		var candidate_path := "%s/%s/%s.png" % [SKILL_ICON_ROOT, folder_name, icon_base]
+		if ResourceLoader.exists(candidate_path):
+			icon_path = candidate_path
+			break
+	if icon_path.is_empty():
 		var fallback_base := str(SKILL_ICON_FALLBACKS.get(resolved_skill_id, ""))
 		if fallback_base.is_empty():
 			fallback_base = "%s_icon" % folder_name
@@ -214,6 +218,19 @@ func _parse_skill_path(resource_path: String) -> Dictionary:
 		"tree_key": segments[1],
 		"resource_path": resource_path,
 	}
+
+
+func _resolve_icon_base_names(skill_id: String) -> PackedStringArray:
+	var candidates: PackedStringArray = []
+	var segments := skill_id.split("_", false)
+	if segments.size() > 3:
+		candidates.append("_".join(segments.slice(2)))
+	if SKILL_ICON_ALIASES.has(skill_id):
+		candidates.append(str(SKILL_ICON_ALIASES[skill_id]))
+	var legacy_base := _resolve_icon_base_name(skill_id)
+	if not candidates.has(legacy_base):
+		candidates.append(legacy_base)
+	return candidates
 
 
 func _resolve_icon_base_name(skill_id: String) -> String:
