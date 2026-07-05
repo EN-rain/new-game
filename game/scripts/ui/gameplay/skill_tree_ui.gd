@@ -527,9 +527,51 @@ func _build_skill_state_text(skill, level: int, pending_level: int, slottable: b
 
 
 func _summarize_skill(skill, level: int) -> String:
-	var description: String = str(skill.get_description(max(level, 1)))
+	var description: String = _format_skill_description_for_editor(skill, max(level, 1)) if Engine.is_editor_hint() else str(skill.get_description(max(level, 1)))
 	var lines: PackedStringArray = description.split("\n", false)
 	return lines[0] if not lines.is_empty() else description
+
+
+func _format_skill_description_for_editor(skill, level: int) -> String:
+	var resolved_level := clampi(level, 0, int(skill.max_level))
+	var description := str(skill.description_template)
+	description = description.replace("{level}", str(resolved_level))
+	description = description.replace("{max_level}", str(skill.max_level))
+	description = description.replace("{value}", _stringify_editor_skill_value(_get_editor_skill_value(skill, resolved_level)))
+	return description
+
+
+func _get_editor_skill_value(skill, level: int) -> Variant:
+	var value = skill.value_per_level
+	if value is Array:
+		var entries: Array = value
+		if entries.is_empty():
+			return null
+		return entries[min(level, entries.size() - 1)]
+	if value is Dictionary:
+		var source: Dictionary = value
+		if source.has("base") and source.has("per_level"):
+			var base_value = source.get("base")
+			var per_level_value = source.get("per_level")
+			if (base_value is int or base_value is float) and (per_level_value is int or per_level_value is float):
+				return base_value + (per_level_value * level)
+			return per_level_value
+		if source.has(str(level)):
+			return source.get(str(level))
+		return source
+	if value is int or value is float:
+		return value * level
+	return value
+
+
+func _stringify_editor_skill_value(value: Variant) -> String:
+	if value == null:
+		return ""
+	if value is String:
+		return value
+	if value is float:
+		return str(snapped(value, 0.001))
+	return str(value)
 
 
 func _show_tooltip(skill_id: String) -> void:
@@ -845,16 +887,22 @@ func _get_pending_point_count() -> int:
 
 
 func _get_effective_sp_available() -> int:
+	if Engine.is_editor_hint():
+		return 0
 	var manager = _skill_tree_manager()
 	return 0 if manager == null else int(manager.get_sp_available()) - _get_pending_point_count()
 
 
 func _get_effective_skill_level(skill_id: String) -> int:
+	if Engine.is_editor_hint():
+		return 0
 	var manager = _skill_tree_manager()
 	return 0 if manager == null else int(manager.call("get_skill_level", skill_id)) + int(_pending_investments.get(skill_id, 0))
 
 
 func _get_effective_main_tree_sp_spent() -> int:
+	if Engine.is_editor_hint():
+		return 0
 	var manager = _skill_tree_manager()
 	if manager == null:
 		return 0
@@ -871,6 +919,8 @@ func _get_effective_main_tree_sp_spent() -> int:
 
 
 func _get_effective_subclass_sp_spent(tree_key: String) -> int:
+	if Engine.is_editor_hint():
+		return 0
 	var manager = _skill_tree_manager()
 	if manager == null:
 		return 0
@@ -887,10 +937,14 @@ func _get_effective_subclass_sp_spent(tree_key: String) -> int:
 
 
 func _are_subclasses_effectively_unlocked() -> bool:
+	if Engine.is_editor_hint():
+		return false
 	return _get_effective_main_tree_sp_spent() >= 20
 
 
 func _is_skill_effectively_slottable(skill_id: String) -> bool:
+	if Engine.is_editor_hint():
+		return false
 	var registry = _skill_registry()
 	if registry == null:
 		return false
@@ -903,6 +957,8 @@ func _is_skill_effectively_slottable(skill_id: String) -> bool:
 
 
 func _can_stage_invest(skill) -> bool:
+	if Engine.is_editor_hint():
+		return false
 	if skill == null:
 		return false
 	var current_level := _get_effective_skill_level(skill.skill_id)

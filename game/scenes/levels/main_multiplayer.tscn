@@ -8,7 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://2k0ri6y3u4g5" path="res://scenes/entities/enemies/blue_slime.tscn" id="7_blueslime"]
 [ext_resource type="PackedScene" uid="uid://b2fhc13ouapkd" path="res://scenes/entities/enemies/plagued_lancer.tscn" id="8_lancer"]
 [ext_resource type="PackedScene" uid="uid://b4ucijbuciv4j" path="res://scenes/entities/enemies/archer.tscn" id="9_archer"]
-[ext_resource type="PackedScene" uid="uid://d4lmp5nr2di6d" path="res://scenes/entities/enemies/void_warden.tscn" id="10_warden"]
+[ext_resource type="PackedScene" uid="uid://r4dcymke0vlg" path="res://scenes/entities/enemies/void_warden.tscn" id="10_warden"]
 
 [node name="Main" type="Node2D" unique_id=1316580081]
 y_sort_enabled = true

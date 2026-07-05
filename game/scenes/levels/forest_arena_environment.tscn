@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=4 uid="uid://ct24k5p0osd8k"]
+
+[ext_resource type="Script" path="res://scripts/levels/forest_arena_environment.gd" id="1_env_script"]
+
+[node name="ForestArenaEnvironment" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_env_script")
