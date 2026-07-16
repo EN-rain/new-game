@@ -1,0 +1,19 @@
+{
+  "op": 2,
+  "user_id": "fixture-user-001",
+  "data": {
+    "type": "state",
+    "players": [
+      {
+        "user_id": "fixture-user-001",
+        "x": 320.5,
+        "y": 180.25,
+        "vel_x": 0.0,
+        "vel_y": 0.0,
+        "facing": 1,
+        "last_processed_seq": 42
+      }
+    ],
+    "mobs": []
+  }
+}

@@ -14,6 +14,11 @@ game/addons/
 
 # Build artifacts (regenerate from Godot)
 exports/
+**/bin/
+**/obj/
+
+# Local agent/code-navigation state
+.serena/
 
 # Local Godot runtime test harnesses
 game/tests/

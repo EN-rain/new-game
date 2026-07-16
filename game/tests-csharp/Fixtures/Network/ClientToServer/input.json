@@ -1,0 +1,14 @@
+{
+  "move_x": 1.0,
+  "move_y": 0.0,
+  "is_attacking": true,
+  "facing": 1,
+  "is_dashing": false,
+  "attack_rotation": 0.25,
+  "attack_seq": 3,
+  "dash_seq": 1,
+  "seq": 42,
+  "pos_x": 320.5,
+  "pos_y": 180.25,
+  "op": 1
+}

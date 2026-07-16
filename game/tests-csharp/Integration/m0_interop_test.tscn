@@ -1,0 +1,21 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://tests-csharp/Integration/m0_interop_test.gd" id="1_runner"]
+[ext_resource type="Script" path="res://src/Interop/M0InteropProbe.cs" id="2_probe"]
+[ext_resource type="Script" path="res://tests-csharp/Integration/m0_gdscript_echo.gd" id="3_echo"]
+[ext_resource type="Resource" path="res://resources/skills/tank/paladin/tank_paladin_holy_strike_ability.tres" id="4_skill"]
+[ext_resource type="BehaviorTree" path="res://tests-csharp/Integration/m0_limbo_tree.tres" id="5_tree"]
+
+[node name="M0InteropTest" type="Node"]
+script = ExtResource("1_runner")
+
+[node name="M0InteropProbe" type="Node" parent="."]
+script = ExtResource("2_probe")
+ProbeLabel = "scene-export-preserved"
+SkillResource = ExtResource("4_skill")
+
+[node name="BTPlayer" type="BTPlayer" parent="M0InteropProbe"]
+behavior_tree = ExtResource("5_tree")
+
+[node name="GdScriptEcho" type="Node" parent="."]
+script = ExtResource("3_echo")

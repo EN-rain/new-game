@@ -1,0 +1,12 @@
+{
+  "source": "res://scripts/resources/classes/tank/paladin_class.gd",
+  "display_name": "Paladin",
+  "modifiers_hp": 1.22,
+  "modifiers_speed": 0.9,
+  "modifiers_damage": 1.05,
+  "modifiers_defense": 1.18,
+  "modifiers_attack_speed": 0.9,
+  "mana_bonus": 15,
+  "mana_regen_bonus": 0.5,
+  "hp_regen_bonus": 1.0
+}

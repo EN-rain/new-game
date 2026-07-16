@@ -1,0 +1,8 @@
+{
+  "type": "player_info",
+  "user_id": "fixture-user-001",
+  "ign": "FixturePlayer",
+  "is_host": true,
+  "slime_variant": "blue",
+  "op": 0
+}

@@ -1,0 +1,10 @@
+{
+  "source": "res://resources/data/shop_items.json",
+  "category": "consumables",
+  "item_id": "health_potion_small",
+  "display_name": "Health Potion",
+  "item_type": "CONSUMABLE",
+  "price": 8,
+  "max_stacks": 99,
+  "instant_heal": 50
+}

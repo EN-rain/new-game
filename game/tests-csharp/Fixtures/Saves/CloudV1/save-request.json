@@ -1,0 +1,22 @@
+{
+  "data": {
+    "version": 1,
+    "saved_at": "2026-07-16T12:00:00",
+    "mode": "solo",
+    "player_class_id": "tank",
+    "player_subclass_id": "paladin",
+    "player_level": 3,
+    "player_xp": 25,
+    "skill_tree_state": {
+      "version": 1,
+      "invested": {},
+      "action_bar": ["", "", "", ""],
+      "sp_available": 2,
+      "total_sp_earned": 2,
+      "subclasses_unlock_emitted": false
+    },
+    "coins": 12,
+    "score": 150,
+    "round": 2
+  }
+}

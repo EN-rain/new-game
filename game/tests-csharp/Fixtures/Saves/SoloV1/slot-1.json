@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "saved_at": "2026-07-16T12:00:00",
+  "scene_path": "res://scenes/levels/main.tscn",
+  "player_class_id": "tank",
+  "player_class_name": "Tank",
+  "player_subclass_id": "paladin",
+  "subclass_choice_made": true,
+  "player_level": 3,
+  "player_xp": 25,
+  "skill_tree_state": {
+    "version": 1,
+    "invested": {
+      "tank_paladin_holy_strike_ability": 1
+    },
+    "action_bar": ["tank_paladin_holy_strike_ability", "", "", ""],
+    "sp_available": 1,
+    "total_sp_earned": 2,
+    "subclasses_unlock_emitted": false
+  },
+  "coins": 12,
+  "score": 150,
+  "round": 2
+}

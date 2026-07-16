@@ -1,0 +1,12 @@
+[gd_resource type="BehaviorTree" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://tests-csharp/Integration/m0_limbo_to_csharp_task.gd" id="1_task"]
+
+[sub_resource type="BlackboardPlan" id="BlackboardPlan_m0"]
+
+[sub_resource type="BTAction" id="BTAction_m0"]
+script = ExtResource("1_task")
+
+[resource]
+blackboard_plan = SubResource("BlackboardPlan_m0")
+root_task = SubResource("BTAction_m0")

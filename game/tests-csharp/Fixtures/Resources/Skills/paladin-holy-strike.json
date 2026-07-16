@@ -1,0 +1,10 @@
+{
+  "source": "res://resources/skills/tank/paladin/tank_paladin_holy_strike_ability.tres",
+  "script": "res://scripts/resources/skill_definition.gd",
+  "skill_id": "tank_paladin_holy_strike_ability",
+  "display_name": "Holy Strike",
+  "skill_type": 1,
+  "max_level": 5,
+  "sp_cost_per_level": 1,
+  "value_per_level": "+7.5 dmg / +0.25s"
+}

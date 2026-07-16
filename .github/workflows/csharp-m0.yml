@@ -1,0 +1,52 @@
+name: CSharp M0
+
+on:
+  push:
+    paths:
+      - "game/**/*.cs"
+      - "game/**/*.csproj"
+      - "game/**/*.sln"
+      - "game/tests-csharp/**"
+      - "global.json"
+      - ".editorconfig"
+      - "tools/csharp/**"
+      - ".github/workflows/csharp-m0.yml"
+  pull_request:
+    paths:
+      - "game/**/*.cs"
+      - "game/**/*.csproj"
+      - "game/**/*.sln"
+      - "game/tests-csharp/**"
+      - "global.json"
+      - ".editorconfig"
+      - "tools/csharp/**"
+      - ".github/workflows/csharp-m0.yml"
+
+jobs:
+  windows-foundation:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.401
+
+      - name: Download Godot 4.6.2 .NET editor and templates
+        shell: pwsh
+        run: |
+          $release = 'https://godot-releases.nbg1.your-objectstorage.com/4.6.2-stable'
+          Invoke-WebRequest "$release/Godot_v4.6.2-stable_mono_win64.zip" -OutFile "$env:RUNNER_TEMP/godot.zip"
+          Invoke-WebRequest "$release/Godot_v4.6.2-stable_mono_export_templates.tpz" -OutFile "$env:RUNNER_TEMP/templates.zip"
+          Expand-Archive "$env:RUNNER_TEMP/godot.zip" "$env:RUNNER_TEMP/godot"
+          Expand-Archive "$env:RUNNER_TEMP/templates.zip" "$env:RUNNER_TEMP/templates"
+          $templateRoot = Join-Path $env:APPDATA 'Godot/export_templates/4.6.2.stable.mono'
+          New-Item -ItemType Directory -Path $templateRoot -Force | Out-Null
+          Copy-Item "$env:RUNNER_TEMP/templates/templates/*" $templateRoot -Recurse -Force
+          $editor = Get-ChildItem "$env:RUNNER_TEMP/godot" -Recurse -Filter 'Godot_v4.6.2-stable_mono_win64.exe' | Select-Object -First 1
+          "GODOT_DOTNET_EXE=$($editor.FullName)" >> $env:GITHUB_ENV
+
+      - name: Verify M0 foundation and Windows export
+        shell: pwsh
+        run: ./tools/csharp/Verify-M0.ps1 -GodotExe $env:GODOT_DOTNET_EXE
